@@ -25,4 +25,7 @@ public class Constants {
     public static final boolean DEBUG = true;
 
     public final static int MAX_CHATROOM_TEXT	= 16;
+
+    public static final String SEARCH = "search";
+    public static final String SEARCHTEXT = "searchtext";
 }

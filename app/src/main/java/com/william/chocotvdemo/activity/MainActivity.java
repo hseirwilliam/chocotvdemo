@@ -2,7 +2,9 @@ package com.william.chocotvdemo.activity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.widget.CursorAdapter;
@@ -25,6 +27,7 @@ import com.activeandroid.ActiveAndroid;
 import com.bumptech.glide.Glide;
 import com.william.chocotvdemo.R;
 import com.william.chocotvdemo.common.CommonDBUtils;
+import com.william.chocotvdemo.common.Constants;
 import com.william.chocotvdemo.common.DBA;
 import com.william.chocotvdemo.common.WhVollyPost;
 import com.william.chocotvdemo.model.Drama;
@@ -92,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 mDramaCursor = queryDramaforLikeName(s.toString());
                 HILog.d(TAG, "afterTextChanged : queryDramaforLikeName.getCount() = " + mDramaCursor.getCount());
                 showDramaListView();
+                setSearchText(s.toString());
             }
         };
         mEtSearch.addTextChangedListener(mTextWatcher);
@@ -104,12 +108,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Model;
-//        doWhVollyPost_DramaList();
-        mDramaCursor = CommonDBUtils.getDramaCursor();
-        showDramaListView();
+        if(isNetworkConnected()){
+            HILog.d(TAG, "isNetworkConnected = true.");
+            doWhVollyPost_DramaList();
+        } else {
+            mDramaCursor = CommonDBUtils.getDramaCursor();
+            showDramaListView();
+        }
+
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
         );
+
+        mEtSearch.setText(getSearchText());
     }
 
     private void doWhVollyPost_DramaList(){
@@ -119,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(CHOCOTV_DRAMA_LIST_ResponseVo dramaRespondVo) {
                 HILog.d(TAG, "onSuccess:");
                 saveDramaListIntoDb(dramaRespondVo);
+                mDramaCursor = CommonDBUtils.getDramaCursor();
                 showDramaListView();
             }
 
@@ -228,6 +240,27 @@ public class MainActivity extends AppCompatActivity {
 //            HILog.d(TAG, "DramaListViewCursorAdapter: getViewTypeCount:");
             return 1;
         }
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null;
+    }
+
+    private String getSearchText(){
+        SharedPreferences searchdata = getSharedPreferences(Constants.SEARCH, 0);
+        String searchtext = searchdata.getString(Constants.SEARCHTEXT, Constants.EMPTY_STRING);
+        HILog.d(TAG, "getSearchText: searchtext: " + searchtext);
+        return searchtext;
+    }
+
+    private void setSearchText(String searchtext){
+        HILog.d(TAG, "setSearchText: searchtext: " + searchtext);
+        SharedPreferences sharedPreferences = mActivity.getSharedPreferences(Constants.SEARCH, 0);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(Constants.SEARCHTEXT, searchtext);
+        editor.commit();
     }
 
 }
