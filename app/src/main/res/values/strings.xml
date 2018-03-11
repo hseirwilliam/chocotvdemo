@@ -11,4 +11,7 @@
     <string name="volley_error_parse">Please check if any update version for such un-expected error.</string>
     <string name="ac_result_not_null">actorControllerResult != null,</string>
     <string name="ac_result_is_null">actorControllerResult is null</string>
+
+    <string name="dialog_button_search">Search</string>
+    <string name="dialog_button_clear">Clear</string>
 </resources>

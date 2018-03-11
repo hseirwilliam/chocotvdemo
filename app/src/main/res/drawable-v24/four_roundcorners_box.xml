@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle"   >
+
+    <solid
+        android:color="@android:color/white" >
+    </solid>
+
+    <!--stroke
+        android:width="2dp"
+        android:color="#C4CDE0" >
+    </stroke-->
+
+    <padding
+        android:left="5dp"
+        android:top="5dp"
+        android:right="5dp"
+        android:bottom="5dp"    >
+    </padding>
+
+    
+    <!--   
+    			╭－－－－	╮	
+    			｜		｜
+    			｜		｜
+    		    └－－－－	┘
+    			背景圖形狀
+     -->
+
+    <corners
+        android:topRightRadius="11dp"   
+        android:topLeftRadius="11dp"
+        android:bottomLeftRadius="11dp"
+        android:bottomRightRadius="11dp"
+        >
+    </corners>
+
+</shape>

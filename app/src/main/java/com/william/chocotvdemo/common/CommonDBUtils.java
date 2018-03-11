@@ -96,4 +96,19 @@ public class CommonDBUtils {
         return result;
     }
 
+    public static Cursor queryDramaforLikeName(String name){
+        Cursor resultCursor=null;
+        HILog.d(TAG, "queryDramaforLikeName:");
+
+        Select select = new Select();
+        String whereclause =  DBA.Field.NAME + " LIKE '%" + name + "%'";
+        String sqlcommand = select.from(Drama.class)
+                .where(whereclause)
+                .toSql();
+        HILog.d(TAG, "queryDramaforLikeName: sqlcommand = " + sqlcommand);
+        resultCursor = Cache.openDatabase().rawQuery(sqlcommand, null);
+        HILog.d(TAG, "queryDramaforLikeName: count = " + resultCursor.getCount());
+        return resultCursor;
+    }
+
 }

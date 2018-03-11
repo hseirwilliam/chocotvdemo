@@ -1,45 +1,115 @@
 package com.william.chocotvdemo.activity;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.pm.PackageManager;
+import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.AbsListView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.activeandroid.ActiveAndroid;
-import com.activeandroid.query.Delete;
+import com.bumptech.glide.Glide;
 import com.william.chocotvdemo.R;
 import com.william.chocotvdemo.common.CommonDBUtils;
-import com.william.chocotvdemo.common.Constants;
 import com.william.chocotvdemo.common.DBA;
 import com.william.chocotvdemo.common.WhVollyPost;
 import com.william.chocotvdemo.model.Drama;
 import com.william.chocotvdemo.utils.HILog;
+import com.william.chocotvdemo.utils.StringUtil;
 import com.william.chocotvdemo.vo.BaseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_ResponseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_drama_list_item_EntityVo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+
+import static com.william.chocotvdemo.common.CommonDBUtils.queryDramaforLikeName;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     public static Activity mActivity;
     private Cursor mDramaCursor = null;
+    DisplayMetrics metrics;
+    private int m_Height_item, m_Width_item;
+    private int m_Height, m_Width;
+    final int listview_item_count = 3;
+    ListView mDramaListView;
+    DramaListViewCursorAdapter dramaListViewCursorAdapter;
+    EditText mEtSearch;
+    Button mBtnCancel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mActivity = MainActivity.this;
-        //Model;View;
-        doWhVollyPost_DramaList();
+
+        //View
+        metrics = new DisplayMetrics();
+        mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        m_Height = metrics.heightPixels;
+        m_Width = metrics.widthPixels;
+        m_Height_item = (m_Height - 200) / listview_item_count;
+        m_Width_item = m_Width;
+        mDramaListView = (ListView) findViewById(R.id.lvDrama);
+        mBtnCancel = (Button) findViewById(R.id.btn_cancel);
+        mBtnCancel.setOnClickListener(new Button.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                mEtSearch.setText("");
+            }
+        });
+        mEtSearch = (EditText) findViewById(R.id.et_search);
+        TextWatcher mTextWatcher = new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                HILog.d(TAG, "beforeTextChanged : count = " + count + "; " + s);
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                HILog.d(TAG, "onTextChanged : count = " + count + "; " + s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                HILog.d(TAG, "afterTextChanged: " + s.toString());
+                mDramaCursor = queryDramaforLikeName(s.toString());
+                HILog.d(TAG, "afterTextChanged : queryDramaforLikeName.getCount() = " + mDramaCursor.getCount());
+                showDramaListView();
+            }
+        };
+        mEtSearch.addTextChangedListener(mTextWatcher);
+        mEtSearch.setOnFocusChangeListener(new View.OnFocusChangeListener(){
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                HILog.d(TAG, "hasFocus = " + hasFocus);
+            }
+        });
+
+        //Model;
+//        doWhVollyPost_DramaList();
+        mDramaCursor = CommonDBUtils.getDramaCursor();
+        showDramaListView();
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+        );
     }
 
     private void doWhVollyPost_DramaList(){
@@ -84,10 +154,80 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDramaListView(){
-        mDramaCursor = CommonDBUtils.getDramaCursor();
         int count = mDramaCursor.getCount();
         HILog.d(TAG, "showDramaListView: count = " + count);
+        dramaListViewCursorAdapter = new DramaListViewCursorAdapter(mActivity, mDramaCursor);
+        mDramaListView.setAdapter(dramaListViewCursorAdapter);
+    }
 
+    public static class ViewHolder {
+        ImageView ivThumb;
+        TextView tvName;
+        TextView tvRating;
+        TextView tvCreated_at;
+        TextView tvTotal_views;
+    }
+
+    public class DramaListViewCursorAdapter extends CursorAdapter {
+        LayoutInflater mInflater;
+        public DramaListViewCursorAdapter(Context context, Cursor c) {
+            super(context, c);
+            HILog.d(TAG, "DramaListViewCursorAdapter:");
+            mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            HILog.d(TAG, "DramaListViewCursorAdapter: newView: position = " + cursor.getPosition());
+            ViewHolder holder = new ViewHolder();
+            View v = mInflater.inflate(R.layout.listview_drama_row_layout, parent, false);
+            holder.ivThumb = (ImageView) v.findViewById(R.id.ivThumb);
+            holder.tvName = (TextView) v.findViewById(R.id.tvName);
+            holder.tvRating = (TextView) v.findViewById(R.id.tvRating);
+            holder.tvCreated_at = (TextView) v.findViewById(R.id.tvCreated_at);
+            holder.tvTotal_views = (TextView) v.findViewById(R.id.tvTotal_views);
+            AbsListView.LayoutParams params=new AbsListView.LayoutParams(m_Width_item, m_Height_item);
+            v.setLayoutParams(params);
+            v.setTag(R.id.ll_dramalist, holder);
+            return v;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            ViewHolder holder = null;
+            holder = (ViewHolder) view.getTag(R.id.ll_dramalist);
+            int drama_id = cursor.getInt(cursor.getColumnIndex(DBA.Field.DRAMA_ID));
+            String tvName_8 = cursor.getString(cursor.getColumnIndex(DBA.Field.NAME));
+            String strnThumb = Uri.parse(cursor.getString(cursor.getColumnIndex(DBA.Field.THUMB))).toString();
+            Glide.with(mActivity).load(strnThumb).into(holder.ivThumb);
+            String tvName = "";
+            try {
+                tvName = new String(tvName_8.getBytes("ISO-8859-1"), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            holder.tvName.setText(tvName);
+            String tvRating = Float.toString(cursor.getFloat(cursor.getColumnIndex(DBA.Field.RATING)));
+            holder.tvRating.setText(tvRating);
+            String tvCreated_at = cursor.getString(cursor.getColumnIndex(DBA.Field.CREATED_AT));
+            holder.tvCreated_at.setText(tvCreated_at);
+            String tvTotal_views = String.valueOf(cursor.getString(cursor.getColumnIndex(DBA.Field.TOTAL_VIEWS)));
+            holder.tvTotal_views.setText(tvTotal_views);
+
+            return;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+//            HILog.d(TAG, "DramaListViewCursorAdapter: getItemViewType:");
+            return 1;
+        }
+
+        @Override
+        public int getViewTypeCount() {
+//            HILog.d(TAG, "DramaListViewCursorAdapter: getViewTypeCount:");
+            return 1;
+        }
     }
 
 }

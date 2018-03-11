@@ -74,7 +74,7 @@ public class WhVollyPost<REQ,REP> {
         StringRequest stringRequest = new StringRequest(Method.GET,URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-//                HILog.d(TAG, "executeChoco: stringRequest: onResponse = " + response);
+                HILog.d(TAG, "executeChoco: stringRequest: onResponse = " + response);
                 REP userRespondVo = null;
                 try {
                     String respondJsonString = response.toString();
