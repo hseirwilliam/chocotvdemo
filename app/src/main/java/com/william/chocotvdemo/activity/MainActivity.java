@@ -2,6 +2,7 @@ package com.william.chocotvdemo.activity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -20,6 +21,7 @@ import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,7 +34,6 @@ import com.william.chocotvdemo.common.DBA;
 import com.william.chocotvdemo.common.WhVollyPost;
 import com.william.chocotvdemo.model.Drama;
 import com.william.chocotvdemo.utils.HILog;
-import com.william.chocotvdemo.utils.StringUtil;
 import com.william.chocotvdemo.vo.BaseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_ResponseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_drama_list_item_EntityVo;
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tvRating;
         TextView tvCreated_at;
         TextView tvTotal_views;
+        LinearLayout llDramalistitem;
     }
 
     public class DramaListViewCursorAdapter extends CursorAdapter {
@@ -198,17 +200,18 @@ public class MainActivity extends AppCompatActivity {
             holder.tvRating = (TextView) v.findViewById(R.id.tvRating);
             holder.tvCreated_at = (TextView) v.findViewById(R.id.tvCreated_at);
             holder.tvTotal_views = (TextView) v.findViewById(R.id.tvTotal_views);
+            holder.llDramalistitem = (LinearLayout) v.findViewById(R.id.ll_dramalistitem);
             AbsListView.LayoutParams params=new AbsListView.LayoutParams(m_Width_item, m_Height_item);
             v.setLayoutParams(params);
-            v.setTag(R.id.ll_dramalist, holder);
+            v.setTag(R.id.ll_dramalistitem, holder);
             return v;
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor cursor) {
+        public void bindView(View view, Context context, final Cursor cursor) {
             ViewHolder holder = null;
-            holder = (ViewHolder) view.getTag(R.id.ll_dramalist);
-            int drama_id = cursor.getInt(cursor.getColumnIndex(DBA.Field.DRAMA_ID));
+            holder = (ViewHolder) view.getTag(R.id.ll_dramalistitem);
+            final int drama_id = cursor.getInt(cursor.getColumnIndex(DBA.Field.DRAMA_ID));
             String tvName_8 = cursor.getString(cursor.getColumnIndex(DBA.Field.NAME));
             String strnThumb = Uri.parse(cursor.getString(cursor.getColumnIndex(DBA.Field.THUMB))).toString();
             Glide.with(mActivity).load(strnThumb).into(holder.ivThumb);
@@ -225,6 +228,14 @@ public class MainActivity extends AppCompatActivity {
             holder.tvCreated_at.setText(tvCreated_at);
             String tvTotal_views = String.valueOf(cursor.getString(cursor.getColumnIndex(DBA.Field.TOTAL_VIEWS)));
             holder.tvTotal_views.setText(tvTotal_views);
+
+            holder.llDramalistitem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HILog.d(TAG, "DramaListViewCursorAdapter: bindView: llDramalistitem: clicked. drama_id = " + drama_id);
+                    showDramaInfoDialog(drama_id);
+                }
+            });
 
             return;
         }
@@ -263,4 +274,45 @@ public class MainActivity extends AppCompatActivity {
         editor.commit();
     }
 
+
+    public void showDramaInfoDialog(int drama_id) {
+        List<Drama> dramaList = CommonDBUtils.getDramaList(DBA.Field.DRAMA_ID, drama_id);
+        HILog.d(TAG, "showDramaInfoDialog: dramaList.size(): " + dramaList.size());
+        String tvName = "";
+        try {
+            tvName = new String(dramaList.get(0).name.getBytes("ISO-8859-1"), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        HILog.d(TAG, "showDramaInfoDialog: name =  " + tvName);
+        String strnThumb = Uri.parse(dramaList.get(0).thumb).toString();
+
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.layout_custom_dialog, null);
+        final ImageView ivThumb_dialog = alertLayout.findViewById(R.id.ivThumb_dialog);
+        Glide.with(mActivity).load(strnThumb).into(ivThumb_dialog);
+        final TextView tvRating_dialog = alertLayout.findViewById(R.id.tvRating_dialog);
+        tvRating_dialog.setText(Float.toString(dramaList.get(0).rating));
+        final TextView tvTotal_views_dialog = alertLayout.findViewById(R.id.tvTotal_views_dialog);
+        tvTotal_views_dialog.setText(Integer.toString(dramaList.get(0).total_views));
+        final TextView tvCreated_at_dialog = alertLayout.findViewById(R.id.tvCreated_at_dialog);
+        tvCreated_at_dialog.setText(dramaList.get(0).created_at);
+
+        android.support.v7.app.AlertDialog.Builder alert = new android.support.v7.app.AlertDialog.Builder(this);
+        alert.setTitle(tvName);
+        // this is set the view from XML inside AlertDialog
+        alert.setView(alertLayout);
+        // disallow cancel of AlertDialog on click of back button and outside touch
+        alert.setCancelable(false);
+
+        alert.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        android.support.v7.app.AlertDialog dialog = alert.create();
+        dialog.show();
+    }
 }

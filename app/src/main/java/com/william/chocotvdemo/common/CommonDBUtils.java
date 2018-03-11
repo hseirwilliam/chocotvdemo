@@ -31,7 +31,7 @@ public class CommonDBUtils {
         return null;
     }
 
-    private static List<Drama> getDramaList(String fieldname, int fieldvalue){
+    public static List<Drama> getDramaList(String fieldname, int fieldvalue){
         Select select = new Select();
         String whereclause =  fieldname + " LIKE " + StringUtil.addquote("%" + fieldvalue + "%");
 //        String whereclause =  fieldname + " EQUALS  " + StringUtil.addquote(String.valueOf(fieldvalue));
