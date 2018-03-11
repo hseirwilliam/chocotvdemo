@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">chocotvdemo</string>
+    <string name="db_name">"chocotv.db";</string>
+
+    <!-- Volley Error Info -->
+    <string name="volley_error_noconnection">Please check your network connection!</string>
+    <string name="volley_error_timeout">Time out when making networking connections. Please try afain later.</string>
+    <string name="volley_error_authfailure">Verification error when accessing serever. Please contact the support personals.</string>
+    <string name="volley_error_server">Can not reach the sevrer. Please contac the support personals.</string>
+    <string name="volley_error_network">Please try again as can not access the server at present.</string>
+    <string name="volley_error_parse">Please check if any update version for such un-expected error.</string>
+    <string name="ac_result_not_null">actorControllerResult != null,</string>
+    <string name="ac_result_is_null">actorControllerResult is null</string>
 </resources>
