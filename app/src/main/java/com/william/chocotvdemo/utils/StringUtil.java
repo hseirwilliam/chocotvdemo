@@ -230,4 +230,24 @@ public class StringUtil {
         }
         return buf.toString();
     }
+
+    public static String From8859toUtf8(String input){
+        String value = "";
+        try {
+            value = new String(input.getBytes("ISO-8859-1"), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
+    public static String FromUtf8to8859(String input){
+        String value = "";
+        try {
+            value = new String(input.getBytes("UTF-8"), "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return value;
+    }
 }

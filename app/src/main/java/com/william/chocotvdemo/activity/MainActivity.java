@@ -34,6 +34,7 @@ import com.william.chocotvdemo.common.DBA;
 import com.william.chocotvdemo.common.WhVollyPost;
 import com.william.chocotvdemo.model.Drama;
 import com.william.chocotvdemo.utils.HILog;
+import com.william.chocotvdemo.utils.StringUtil;
 import com.william.chocotvdemo.vo.BaseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_ResponseVo;
 import com.william.chocotvdemo.vo.CHOCOTV_DRAMA_LIST_drama_list_item_EntityVo;
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mDramaCursor = CommonDBUtils.getDramaCursor();
             showDramaListView();
+
         }
 
         getWindow().setSoftInputMode(
@@ -133,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 saveDramaListIntoDb(dramaRespondVo);
                 mDramaCursor = CommonDBUtils.getDramaCursor();
                 showDramaListView();
+                mEtSearch.setText(getSearchText());
             }
 
             @Override
@@ -215,13 +218,7 @@ public class MainActivity extends AppCompatActivity {
             String tvName_8 = cursor.getString(cursor.getColumnIndex(DBA.Field.NAME));
             String strnThumb = Uri.parse(cursor.getString(cursor.getColumnIndex(DBA.Field.THUMB))).toString();
             Glide.with(mActivity).load(strnThumb).into(holder.ivThumb);
-            String tvName = "";
-            try {
-                tvName = new String(tvName_8.getBytes("ISO-8859-1"), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            holder.tvName.setText(tvName);
+            holder.tvName.setText(StringUtil.From8859toUtf8(tvName_8));
             String tvRating = Float.toString(cursor.getFloat(cursor.getColumnIndex(DBA.Field.RATING)));
             holder.tvRating.setText(tvRating);
             String tvCreated_at = cursor.getString(cursor.getColumnIndex(DBA.Field.CREATED_AT));
@@ -278,13 +275,6 @@ public class MainActivity extends AppCompatActivity {
     public void showDramaInfoDialog(int drama_id) {
         List<Drama> dramaList = CommonDBUtils.getDramaList(DBA.Field.DRAMA_ID, drama_id);
         HILog.d(TAG, "showDramaInfoDialog: dramaList.size(): " + dramaList.size());
-        String tvName = "";
-        try {
-            tvName = new String(dramaList.get(0).name.getBytes("ISO-8859-1"), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        HILog.d(TAG, "showDramaInfoDialog: name =  " + tvName);
         String strnThumb = Uri.parse(dramaList.get(0).thumb).toString();
 
         LayoutInflater inflater = getLayoutInflater();
@@ -299,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
         tvCreated_at_dialog.setText(dramaList.get(0).created_at);
 
         android.support.v7.app.AlertDialog.Builder alert = new android.support.v7.app.AlertDialog.Builder(this);
-        alert.setTitle(tvName);
+        alert.setTitle(StringUtil.From8859toUtf8(dramaList.get(0).name));
         // this is set the view from XML inside AlertDialog
         alert.setView(alertLayout);
         // disallow cancel of AlertDialog on click of back button and outside touch

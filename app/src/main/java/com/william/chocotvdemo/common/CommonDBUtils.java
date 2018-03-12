@@ -96,12 +96,13 @@ public class CommonDBUtils {
         return result;
     }
 
+
     public static Cursor queryDramaforLikeName(String name){
         Cursor resultCursor=null;
         HILog.d(TAG, "queryDramaforLikeName:");
 
         Select select = new Select();
-        String whereclause =  DBA.Field.NAME + " LIKE '%" + name + "%'";
+        String whereclause =  DBA.Field.NAME + " LIKE '%" + StringUtil.FromUtf8to8859(name) + "%'";
         String sqlcommand = select.from(Drama.class)
                 .where(whereclause)
                 .toSql();
